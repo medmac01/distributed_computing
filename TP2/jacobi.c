@@ -1,10 +1,18 @@
-#include <stdio.h> #include <stdlib.h>
-#include <string.h> #include <float.h>
-#include <math.h> #include <sys/time.h>
+#include <stdio.h> 
+#include <stdlib.h>
+#include <string.h> 
+#include <float.h>
+#include <math.h>
+#include <sys/time.h>
 #include <omp.h>
-#ifndef VAL_N #define VAL_N 120
-#endif #ifndef VAL_D
-#define VAL_D 80 #endif
+#ifndef VAL_N 
+#define VAL_N 120
+#endif
+#ifndef VAL_D
+#define VAL_D 80
+#endif
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
 
 void random_number(double* array, int size) { 
     for (int i = 0; i < size; i++) {
@@ -25,6 +33,8 @@ int main() {
     srand(421);
     random_number(a, n * n);
     random_number(b, n);
+
+    #pragma omp parallel for
     for (i = 0; i < n; i++) {
         a[i * n + i] += diag;
     }
@@ -37,6 +47,7 @@ int main() {
     gettimeofday(&t_elapsed_0, NULL);
     while (1) { 
         iteration++;
+        // #pragma omp parallel for
         for (i = 0; i < n; i++) {
             x_courant[i] = 0;
             for (j = 0; j < i; j++) {
@@ -48,6 +59,7 @@ int main() {
             x_courant[i] = (b[i] - x_courant[i]) / a[i * n + i];
         }
         double absmax = 0;
+        // #pragma omp parallel for
         for (i = 0; i < n; i++) {
             double curr = fabs(x[i] - x_courant[i]);
             if (curr > absmax) absmax = curr;
@@ -62,8 +74,8 @@ int main() {
     t_cpu_1 = omp_get_wtime();
 
     t_cpu = t_cpu_1 - t_cpu_0;
-    fprintf(stdout, "\n\nSystem␣size␣␣␣␣␣␣␣␣:␣%5d\n" "Iterations␣␣␣␣␣␣␣␣␣:␣%4d\n"
-            "Norme␣␣␣␣␣␣␣␣␣␣␣␣␣␣:␣%10.3E\n" "Elapsed␣time␣␣␣␣␣␣␣:␣%10.3E␣sec.\n" "CPU␣time␣␣␣␣␣␣␣␣␣␣␣:␣%10.3E␣sec.\n",
+    fprintf(stdout, "\n\nSystem␣size\t:␣%5d\n" "Iterations\t:␣%4d\n"
+            "Norme\t\t:␣%10.3E\n" "Elapsed␣time\t:␣%10.3E␣sec.\n" "CPU␣time\t:␣%10.3E␣sec.\n",
             n, iteration, norme, t_elapsed, t_cpu);
     free(a);
     free(x);
